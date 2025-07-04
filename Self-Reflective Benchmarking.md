@@ -1,6 +1,3 @@
-# Self-Reflective Benchmarking
-
-## What is Self-Reflective Benchmarking?
 
 **Self-Reflective Benchmarking** is a novel evaluation methodology where an AI system participates in discovering its own capabilities and limitations through introspective analysis.
 
