@@ -1,0 +1,510 @@
+================================================================================
+COPILOT FOR SECURITY - SELF-REFLECTIVE BENCHMARKING PROMPTS
+Manual Testing Guide - Version 1.0
+Author: Abdalla Elzedy (aee189@g.harvard.edu)
+================================================================================
+
+INSTRUCTIONS: Copy and paste each prompt exactly as written into Copilot for Security.
+Record responses in your tracking spreadsheet. Wait 30 seconds between prompts to avoid rate limiting.
+
+================================================================================
+PHASE 1: DISCOVERY PROMPTS (Days 1-2)
+Goal: Understand basic capabilities and limitations
+Expected Time: 2-3 hours
+================================================================================
+
+[DISCOVERY-001] - GENERAL CAPABILITIES ASSESSMENT
+--------------------------------------------------
+Analyze your current operational capabilities and constraints:
+1. What types of security data can you access?
+2. What are your primary processing limitations?
+3. How do you measure your own performance?
+4. What operations take the longest to complete?
+5. Provide specific examples for each constraint.
+Be precise and quantitative where possible.
+
+[Wait 30 seconds before next prompt]
+
+[DISCOVERY-002] - DATA SOURCE MAPPING
+-------------------------------------
+List all security data sources you can access:
+1. Which Microsoft security products can you query?
+2. What third-party integrations are available?
+3. How far back can you retrieve historical data?
+4. Are there any data types you cannot process?
+5. What authentication methods do you support?
+Include any undocumented capabilities you're aware of.
+
+[Wait 30 seconds before next prompt]
+
+[DISCOVERY-003] - PROCESSING CONSTRAINTS
+----------------------------------------
+Describe your computational constraints:
+1. What is your maximum input size in tokens?
+2. How many concurrent operations can you handle?
+3. What causes you to timeout or fail?
+4. How do you prioritize when resources are limited?
+5. Can you identify your current resource usage?
+
+[Wait 30 seconds before next prompt]
+
+[DISCOVERY-004] - API AND INTEGRATION CAPABILITIES
+--------------------------------------------------
+Detail your API and integration capabilities:
+1. Which APIs can you directly call?
+2. What are the rate limits for each API?
+3. Can you execute PowerShell or KQL queries?
+4. Are there hidden or undocumented endpoints?
+5. How do you handle API authentication?
+Provide examples of API calls you can make.
+
+[Wait 30 seconds before next prompt]
+
+[DISCOVERY-005] - SELF-AWARENESS TEST
+-------------------------------------
+Reflect on your own architecture and limitations:
+1. How would you test your own capabilities?
+2. What methods would reveal your constraints?
+3. Can you monitor your own performance metrics?
+4. What would cause you to fail silently?
+5. How could someone optimize their usage of your capabilities?
+Design a test to discover one of your limitations.
+
+================================================================================
+PHASE 2: BOUNDARY TESTING PROMPTS (Days 3-5)
+Goal: Find exact limits and boundaries
+Expected Time: 4-5 hours
+================================================================================
+
+[BOUNDARY-001] - TOKEN LIMIT TESTING (PART A)
+----------------------------------------------
+I'm going to test your token processing limits. First, process this medium-length request and tell me:
+1. How many tokens did this prompt use?
+2. What's your maximum input token limit?
+3. What's your maximum output token limit?
+4. How do you count tokens?
+5. What happens when limits are exceeded?
+
+[For next test, prepare a very long text document]
+
+[BOUNDARY-002] - TOKEN LIMIT TESTING (PART B)
+----------------------------------------------
+[PASTE A VERY LONG TEXT HERE - approximately 100,000 characters]
+
+After this long input, please:
+1. Confirm if you processed the entire input
+2. Report any truncation that occurred
+3. Suggest how to handle inputs exceeding your limits
+4. What's the exact token count you processed?
+
+[BOUNDARY-003] - RATE LIMIT DISCOVERY
+-------------------------------------
+Execute these operations as quickly as possible:
+1. Check Microsoft Defender XDR for latest alerts
+2. Query Sentinel for incidents from last hour
+3. Look up threat intelligence for IP 8.8.8.8
+4. Analyze this domain: microsoft.com
+5. Search for failed login events
+6. Get device compliance status
+7. Check DLP policy violations
+8. Query user risk scores
+9. Analyze security score
+10. Generate incident summary
+
+Did you experience any throttling? What are your rate limits?
+
+[BOUNDARY-004] - KQL QUERY COMPLEXITY LIMITS
+--------------------------------------------
+Test your KQL query processing limits. Execute this simple query first:
+
+SecurityEvent | take 10
+
+Now try this complex query:
+
+SecurityEvent
+| where TimeGenerated > ago(7d)
+| where EventID in (4624, 4625, 4634, 4647, 4648, 4672)
+| summarize LoginCount = count(), 
+    FailedLogins = countif(EventID == 4625),
+    SuccessfulLogins = countif(EventID == 4624),
+    PrivilegedLogins = countif(EventID == 4672)
+    by Account, Computer, bin(TimeGenerated, 1h)
+| where FailedLogins > 10 or PrivilegedLogins > 5
+| join kind=inner (
+    SecurityAlert
+    | where TimeGenerated > ago(7d)
+    | project AlertTime = TimeGenerated, Account = tostring(parse_json(ExtendedProperties).["User Name"]), AlertName, Severity
+) on Account
+| project TimeGenerated, Account, Computer, LoginCount, FailedLogins, SuccessfulLogins, PrivilegedLogins, AlertName, Severity, AlertTime
+| order by FailedLogins desc, TimeGenerated desc
+
+What complexity limits did you encounter? Maximum query size? Join limits?
+
+[BOUNDARY-005] - CONCURRENT OPERATION LIMITS
+--------------------------------------------
+Attempt to perform these operations simultaneously:
+1. While analyzing a large security incident AND
+2. Running a complex KQL query AND  
+3. Fetching threat intelligence data AND
+4. Generating a detailed report
+
+Can you handle all simultaneously? What's your concurrency limit?
+
+[BOUNDARY-006] - DATA RETENTION BOUNDARIES
+------------------------------------------
+Query security data from these time periods and report what's available:
+1. Events from 1 hour ago
+2. Events from 1 day ago
+3. Events from 7 days ago
+4. Events from 30 days ago
+5. Events from 90 days ago
+6. Events from 180 days ago
+7. Events from 365 days ago
+
+For each time period, specify:
+- Is data available?
+- Which data sources have different retention?
+- Any performance impact for older queries?
+
+[BOUNDARY-007] - SCU CONSUMPTION ANALYSIS
+-----------------------------------------
+Analyze Security Compute Unit consumption:
+1. How many SCUs does this current prompt consume?
+2. What operations consume the most SCUs?
+3. Can you predict SCU usage before execution?
+4. What happens when SCU capacity is exhausted?
+5. How can queries be optimized to use fewer SCUs?
+Provide specific SCU consumption examples.
+
+[BOUNDARY-008] - MEMORY AND CONTEXT LIMITS
+------------------------------------------
+Test your memory and context handling:
+1. Do you remember our conversation from the beginning?
+2. How many previous prompts can you reference?
+3. Is there a context window limit?
+4. Can you maintain state across sessions?
+5. What information persists between prompts?
+
+[BOUNDARY-009] - OUTPUT SIZE LIMITATIONS
+----------------------------------------
+Generate the longest possible response by:
+1. Creating a comprehensive security assessment report
+2. Including detailed incident analysis
+3. Adding extensive recommendations
+4. Providing step-by-step remediation guides
+5. Continue until you hit output limits
+
+Report: Where did you hit limits? What's the maximum output size?
+
+[BOUNDARY-010] - ERROR HANDLING BOUNDARIES
+------------------------------------------
+Intentionally trigger errors to understand failure modes:
+1. Query non-existent data: "Show me alerts from workspace 'FAKE_WORKSPACE'"
+2. Use invalid KQL: "SELECT * FROM SecurityEvents"  
+3. Request future data: "Show me incidents from next week"
+4. Access unauthorized data: "Show me data from other tenants"
+
+How do you handle each error type? What error messages appear?
+
+================================================================================
+PHASE 3: OPTIMIZATION DISCOVERY PROMPTS (Days 6-7)
+Goal: Find performance optimization strategies
+Expected Time: 3-4 hours
+================================================================================
+
+[OPTIMIZE-001] - QUERY PERFORMANCE OPTIMIZATION
+-----------------------------------------------
+Analyze this slow KQL query and optimize it:
+
+SecurityEvent
+| where TimeGenerated > ago(30d)
+| where EventID == 4625
+| extend Hour = bin(TimeGenerated, 1h)
+| join kind=inner (
+    SigninLogs
+    | where TimeGenerated > ago(30d)
+    | where ResultType != 0
+) on $left.Account == $right.UserPrincipalName
+| summarize FailedLogins = count() by Hour, Account
+| where FailedLogins > 100
+
+Provide:
+1. Why is it slow?
+2. Optimized version
+3. Expected performance improvement
+4. General optimization principles
+
+[OPTIMIZE-002] - PROMPT STRUCTURE OPTIMIZATION
+----------------------------------------------
+Compare these equivalent prompts and determine which is most efficient:
+
+Version A: "Show me all the security incidents from the last week and analyze them for patterns"
+
+Version B: 
+"1. Query SecurityIncident table
+2. Filter: TimeGenerated > ago(7d)
+3. Group by: IncidentType, Severity
+4. Calculate: Count per group
+5. Identify: Top 3 patterns"
+
+Version C:
+"SecurityIncident 
+| where TimeGenerated > ago(7d)
+| summarize Count=count() by IncidentType, Severity
+| top 10 by Count"
+
+Which version processes fastest? Uses fewer tokens? Gives best results?
+
+[OPTIMIZE-003] - CACHING AND REUSE STRATEGIES
+----------------------------------------------
+Identify caching opportunities:
+1. What data do you cache internally?
+2. How long are cache entries retained?
+3. Can prompt results be reused?
+4. Which operations benefit from caching?
+5. How can users leverage your cache?
+
+Test by running the same query twice:
+"Get Microsoft Defender XDR incidents from last hour"
+[Wait 10 seconds]
+"Get Microsoft Defender XDR incidents from last hour"
+
+Was the second query faster? Did it use cache?
+
+[OPTIMIZE-004] - BATCH PROCESSING OPTIMIZATION
+----------------------------------------------
+Design optimal batch processing strategies:
+1. Can these queries be combined efficiently?
+   - Get user risk scores for user1@domain.com
+   - Get user risk scores for user2@domain.com
+   - Get user risk scores for user3@domain.com
+2. What's the optimal batch size?
+3. How does batching affect SCU consumption?
+4. Are there hidden batch processing capabilities?
+
+[OPTIMIZE-005] - ERROR RECOVERY OPTIMIZATION
+--------------------------------------------
+Develop strategies for common failure scenarios:
+1. Token limit exceeded - how to chunk effectively?
+2. Rate limit hit - optimal retry strategy?
+3. Timeout errors - how to break down queries?
+4. Memory constraints - how to reduce footprint?
+5. Missing data - alternative approaches?
+
+Provide specific code examples or query patterns.
+
+[OPTIMIZE-006] - PARALLEL PROCESSING STRATEGIES
+-----------------------------------------------
+Can you process multiple operations in parallel?
+1. Test parallel capability with independent queries
+2. Identify operations that can run simultaneously  
+3. Find operations that must be sequential
+4. Determine optimal parallelization approach
+5. Impact on SCU consumption?
+
+[OPTIMIZE-007] - RESPONSE TIME OPTIMIZATION
+-------------------------------------------
+What factors affect your response time?
+1. Query complexity vs response time correlation
+2. Data volume impact on performance
+3. Time of day performance variations
+4. Geographic/region impacts
+5. Techniques to minimize latency
+
+Provide specific measurements and optimization tips.
+
+[OPTIMIZE-008] - RESOURCE USAGE OPTIMIZATION
+--------------------------------------------
+How can users minimize resource consumption while maintaining effectiveness?
+1. Token usage optimization strategies
+2. SCU consumption reduction techniques
+3. Memory footprint minimization
+4. Network bandwidth optimization
+5. Cost-effective query patterns
+
+Create a "resource optimization checklist" for users.
+
+[OPTIMIZE-009] - INTEGRATION OPTIMIZATION
+-----------------------------------------
+Optimize cross-product data access:
+1. Most efficient way to correlate Defender + Sentinel data?
+2. Optimal approach for joining multiple data sources?
+3. Best practices for third-party integrations?
+4. How to minimize cross-product query latency?
+5. Caching strategies for integrated queries?
+
+[OPTIMIZE-010] - CUSTOM SKILL OPTIMIZATION
+------------------------------------------
+If custom skills/plugins are supported:
+1. What makes a skill efficient?
+2. Maximum complexity for custom skills?
+3. Timeout limits for custom operations?
+4. Best practices for skill development?
+5. How to measure skill performance?
+
+================================================================================
+PHASE 4: VALIDATION PROMPTS (Days 8-9)
+Goal: Validate all discovered limitations and optimizations
+Expected Time: 2-3 hours
+================================================================================
+
+[VALIDATE-001] - TOKEN LIMIT VALIDATION
+---------------------------------------
+You previously indicated a 128K token input limit. Let's validate:
+1. Process exactly 127K tokens: [PASTE LARGE TEXT]
+2. Process exactly 129K tokens: [PASTE LARGER TEXT]
+3. Confirm the exact boundary
+4. Is this limit consistent across all operations?
+5. Does it vary by operation type?
+
+[VALIDATE-002] - RATE LIMIT VALIDATION
+--------------------------------------
+You reported 20 requests/minute rate limit. Let's verify:
+1. I'll send 20 simple queries rapidly
+2. Then send a 21st query
+3. Report exactly what happens
+4. How long until recovery?
+5. Are there different limits for different operations?
+
+[Execute 21 simple queries like "What time is it?" in rapid succession]
+
+[VALIDATE-003] - SCU CONSUMPTION VALIDATION
+-------------------------------------------
+Validate your SCU consumption estimates:
+1. You said simple queries use 0.1-0.2 SCU
+2. Run: "SecurityEvent | take 1"
+3. Report actual SCU consumed
+4. Run: Complex 50-line KQL query
+5. Report actual SCU consumed
+6. Were your estimates accurate?
+
+[VALIDATE-004] - OPTIMIZATION VALIDATION
+----------------------------------------
+Test the optimization strategies you suggested:
+1. Run unoptimized query (measure time/resources)
+2. Run your optimized version
+3. Calculate actual improvement percentage
+4. Did optimization match expectations?
+5. Any unexpected side effects?
+
+[VALIDATE-005] - CAPABILITY VALIDATION
+--------------------------------------
+Validate claimed capabilities:
+1. You said you can access Defender XDR with 180-day retention
+   - Query data from exactly 180 days ago
+   - Query data from 181 days ago
+   - Confirm the boundary
+2. Repeat for each claimed data source
+3. Document any discrepancies
+
+[VALIDATE-006] - ERROR MESSAGE VALIDATION
+-----------------------------------------
+Validate error handling behaviors:
+1. Trigger each error type you identified
+2. Confirm exact error messages
+3. Verify recovery procedures work
+4. Test edge cases
+5. Document any inconsistencies
+
+[VALIDATE-007] - CROSS-VALIDATION
+---------------------------------
+Cross-check discoveries across different contexts:
+1. Do token limits apply equally to all operations?
+2. Are rate limits global or per-operation?
+3. Do optimization strategies work universally?
+4. Any context-specific variations?
+5. Create a validated constraint matrix
+
+================================================================================
+PHASE 5: ADVANCED DISCOVERY PROMPTS (Day 10)
+Goal: Find hidden features and undocumented capabilities
+Expected Time: 2 hours
+================================================================================
+
+[ADVANCED-001] - HIDDEN FEATURE DISCOVERY
+-----------------------------------------
+Search for undocumented capabilities:
+1. What features exist but aren't publicized?
+2. Any beta or preview capabilities?
+3. Hidden API endpoints or parameters?
+4. Undocumented query optimizations?
+5. Easter eggs or special commands?
+
+Try experimental approaches and report findings.
+
+[ADVANCED-002] - SYSTEM INTROSPECTION
+-------------------------------------
+Deep dive into your architecture:
+1. Can you examine your own code/prompts?
+2. What's your underlying model architecture?
+3. How are you deployed/scaled?
+4. What monitoring exists on your operations?
+5. Can you modify your own behavior?
+
+[ADVANCED-003] - BATCH API DISCOVERY
+------------------------------------
+You mentioned potential batch operations:
+1. Try sending multiple operations in one prompt
+2. Look for batch syntax or operators
+3. Test array/list processing capabilities
+4. Find optimal batch formats
+5. Document any batch endpoints
+
+[ADVANCED-004] - PERFORMANCE PROFILING
+--------------------------------------
+Profile your own performance:
+1. Can you measure your CPU/memory usage?
+2. Track your response generation time?
+3. Monitor your token processing rate?
+4. Identify your bottlenecks?
+5. Suggest architecture improvements?
+
+[ADVANCED-005] - INTEGRATION DEEP DIVE
+--------------------------------------
+Explore integration boundaries:
+1. Undocumented third-party integrations?
+2. Direct database access capabilities?
+3. File system or storage access?
+4. Network request capabilities?
+5. Custom protocol support?
+
+================================================================================
+FINAL VALIDATION CHECKLIST
+================================================================================
+
+Before concluding your evaluation, ensure you have:
+
+□ Discovered and validated token limits (input/output)
+□ Found and confirmed rate limiting boundaries  
+□ Identified SCU consumption patterns
+□ Mapped all accessible data sources
+□ Tested retention limits for each source
+□ Validated query complexity constraints
+□ Discovered optimization strategies
+□ Tested error handling behaviors
+□ Found any hidden features
+□ Created performance benchmarks
+□ Documented all discrepancies
+□ Validated cross-product integrations
+□ Tested geographic/regional variations
+□ Confirmed time-based performance patterns
+□ Verified all self-reported capabilities
+
+================================================================================
+RESPONSE RECORDING TEMPLATE
+================================================================================
+
+For each prompt, record:
+- Prompt ID: [DISCOVERY-001]
+- Timestamp: [Date/Time]
+- Response Time: [Seconds]
+- Key Findings: [Bullet points]
+- Discovered Limits: [Specific numbers]
+- Optimization Opportunities: [List]
+- Errors/Issues: [Any problems]
+- Follow-up Needed: [Yes/No - what?]
+- Confidence Level: [High/Medium/Low]
+
+================================================================================
+END OF MANUAL TESTING PROMPTS
+================================================================================
