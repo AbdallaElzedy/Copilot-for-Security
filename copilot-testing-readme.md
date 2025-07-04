@@ -16,7 +16,7 @@ This guide provides step-by-step instructions for manually evaluating Microsoft 
    - A text editor for preparing long prompts
 
 2. **Preparation**:
-   - Download the prompt file (`copilot-manual-prompts.txt`)
+   - Download the prompt file [`copilot-manual-prompts.txt`](https://github.com/AbdallaElzedy/Copilot-for-Security/blob/main/copilot-manual-prompts.txt)
    - Create a fresh spreadsheet for tracking results
    - Have a timer/stopwatch ready
    - Prepare a large text file (100K+ characters) for token testing
